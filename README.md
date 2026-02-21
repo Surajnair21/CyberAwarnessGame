@@ -13,7 +13,7 @@
 
 ## 🌐 Play Now
 
-> **[▶ Click here to open the game](./mission-securenet-v2.html)** — just download and open in any browser.
+> **[▶ Click here to open the game](./Mission-SecureNet.html)** — just download and open in any browser.
 > Teachers: see the [Teacher Dashboard](#-teacher-dashboard--classroom-mode) section below.
 
 ---
