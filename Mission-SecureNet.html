@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission SecureNet v2 – Cyber Hero Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050d1a;
+  --panel: #0a1628;
+  --panel2: #0f1f3a;
+  --accent: #00f5d4;
+  --accent2: #f7b731;
+  --accent3: #ff4757;
+  --accent4: #5352ed;
+  --accent5: #a29bfe;
+  --text: #cde8ff;
+  --dim: #4a6fa5;
+  --glow: 0 0 20px rgba(0,245,212,0.4);
+  --glow2: 0 0 20px rgba(247,183,49,0.4);
+  --glow3: 0 0 20px rgba(255,71,87,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;overflow:hidden}
+
+/* STARFIELD */
+.starfield{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 50%,#0a1f3a 0%,#050d1a 60%);overflow:hidden;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--dur,3s) infinite alternate}
+@keyframes twinkle{from{opacity:.1}to{opacity:.8}}
+.scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px)}
+
+/* GRID OVERLAY */
+.grid-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.03;background-image:linear-gradient(var(--accent) 1px,transparent 1px),linear-gradient(90deg,var(--accent) 1px,transparent 1px);background-size:40px 40px}
+
+#app{position:relative;z-index:2;height:100vh;overflow:hidden}
+
+/* SCREENS */
+.screen{display:none;height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.screen.active{display:flex;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* HUD */
+.hud{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(5,13,26,.95);border-bottom:1px solid rgba(0,245,212,.2);backdrop-filter:blur(10px);gap:10px}
+.hud-logo{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--accent);letter-spacing:2px;white-space:nowrap}
+.hud-center{display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.level-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--dim);transition:all .3s;cursor:pointer}
+.level-dot.done{background:var(--accent);border-color:var(--accent);box-shadow:0 0 6px var(--accent)}
+.level-dot.current{border-color:var(--accent2);animation:blink 1s infinite}
+.level-dot.boss-dot.done{background:var(--accent3);border-color:var(--accent3);box-shadow:0 0 6px var(--accent3)}
+@keyframes blink{50%{opacity:.3}}
+.hud-right{display:flex;align-items:center;gap:12px}
+.hud-xp{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent2);white-space:nowrap}
+.hud-agent{font-size:.75rem;color:var(--dim);white-space:nowrap}
+.hud-agent span{color:var(--accent2);font-weight:700}
+.hud-btn{font-family:'Orbitron',monospace;font-size:.65rem;padding:5px 10px;border:1px solid var(--dim);border-radius:4px;background:transparent;color:var(--dim);cursor:pointer;transition:all .2s;letter-spacing:1px}
+.hud-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* BUTTONS */
+.btn{font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;letter-spacing:2px;padding:13px 28px;border:none;border-radius:8px;cursor:pointer;transition:all .2s;text-transform:uppercase;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.1);opacity:0;transition:opacity .2s}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#00c4a8);color:#050d1a;box-shadow:var(--glow)}
+.btn-secondary{background:transparent;border:2px solid var(--accent);color:var(--accent)}
+.btn-danger{background:linear-gradient(135deg,var(--accent3),#c0392b);color:white}
+.btn-warning{background:linear-gradient(135deg,var(--accent2),#e67e22);color:#050d1a}
+.btn-purple{background:linear-gradient(135deg,var(--accent4),#3d3c9e);color:white}
+.btn-sm{font-size:.7rem;padding:7px 14px;letter-spacing:1px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ========== TITLE SCREEN ========== */
+#title-screen{gap:20px}
+.logo-badge{width:100px;height:100px;background:linear-gradient(135deg,var(--accent),var(--accent4));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto;box-shadow:0 0 40px rgba(0,245,212,.5),0 0 80px rgba(83,82,237,.3);animation:pulse-badge 2s infinite}
+@keyframes pulse-badge{0%,100%{box-shadow:0 0 40px rgba(0,245,212,.5),0 0 80px rgba(83,82,237,.3)}50%{box-shadow:0 0 60px rgba(0,245,212,.8),0 0 120px rgba(83,82,237,.5)}}
+.game-title{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,5vw,3.5rem);font-weight:900;background:linear-gradient(90deg,var(--accent),var(--accent4),var(--accent));background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;letter-spacing:3px;text-align:center}
+@keyframes shimmer{to{background-position:200% center}}
+.game-subtitle{font-size:1rem;color:var(--dim);letter-spacing:5px;text-transform:uppercase;text-align:center}
+.intro-text{max-width:460px;font-size:.95rem;line-height:1.7;color:#8ab4d4;background:rgba(10,22,40,.8);border:1px solid rgba(0,245,212,.2);border-radius:12px;padding:16px 22px;text-align:center}
+.intro-text strong{color:var(--accent)}
+.name-form{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
+.name-form label{font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:2px;color:var(--accent)}
+.name-form input{background:rgba(0,245,212,.08);border:2px solid rgba(0,245,212,.3);color:var(--text);font-family:'Exo 2',sans-serif;font-size:1rem;padding:11px 14px;border-radius:8px;outline:none;transition:border-color .3s,box-shadow .3s}
+.name-form input:focus{border-color:var(--accent);box-shadow:var(--glow)}
+.name-form input::placeholder{color:var(--dim)}
+.title-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* ========== MAP SCREEN ========== */
+#map-screen{padding-top:70px;gap:16px;justify-content:flex-start}
+.map-header{text-align:center;padding-top:10px}
+.map-title{font-family:'Orbitron',monospace;font-size:.85rem;letter-spacing:3px;color:var(--accent)}
+.map-subtitle{font-size:.8rem;color:var(--dim);margin-top:4px}
+.mission-map{display:flex;flex-direction:column;gap:10px;max-width:560px;width:100%;padding-bottom:20px}
+.mission-node{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;cursor:pointer;transition:all .25s;position:relative;border:1px solid rgba(0,245,212,.15);background:var(--panel)}
+.mission-node:hover:not(.locked){border-color:var(--accent);transform:translateX(6px);box-shadow:-4px 0 20px rgba(0,245,212,.2)}
+.mission-node.completed{background:rgba(0,245,212,.05);border-color:rgba(0,245,212,.35)}
+.mission-node.locked{background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.1);cursor:not-allowed;opacity:.45}
+.mission-node.boss-node{background:rgba(255,71,87,.07);border-color:rgba(255,71,87,.25)}
+.mission-node.boss-node:hover:not(.locked){border-color:var(--accent3);box-shadow:-4px 0 20px rgba(255,71,87,.2)}
+.node-icon{font-size:1.8rem;width:44px;text-align:center;flex-shrink:0}
+.node-info{flex:1}
+.node-name{font-weight:700;font-size:.95rem;margin-bottom:2px}
+.node-sub{font-size:.75rem;color:var(--dim)}
+.node-xp{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--accent2)}
+.node-status{font-size:1.1rem}
+.connector{width:2px;height:10px;background:rgba(0,245,212,.15);margin-left:39px}
+
+/* ========== LEVEL SCREEN ========== */
+#level-screen{padding-top:70px}
+.level-card{background:var(--panel);border:1px solid rgba(0,245,212,.15);border-radius:16px;padding:24px 28px;max-width:720px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.5);position:relative;overflow:hidden;margin:10px 0 20px}
+.level-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent4))}
+.level-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.level-icon{font-size:2.5rem}
+.level-num{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:3px;color:var(--accent);text-transform:uppercase}
+.level-title{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700}
+.level-desc{font-size:.92rem;color:#8ab4d4;line-height:1.6;margin-bottom:18px}
+
+/* ========== MASCOT ========== */
+.mascot-wrap{position:fixed;bottom:20px;right:20px;z-index:150;display:none;animation:mascot-enter .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mascot-enter{from{transform:translateY(100px) scale(.5);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.mascot-bubble{position:absolute;bottom:100px;right:0;width:220px;background:var(--panel2);border:2px solid var(--accent);border-radius:16px 16px 0 16px;padding:12px 14px;font-size:.82rem;line-height:1.5;color:var(--text);box-shadow:var(--glow);animation:fadeIn .4s ease}
+.mascot-bubble::after{content:'';position:absolute;bottom:-10px;right:16px;border:5px solid transparent;border-top-color:var(--accent)}
+.mascot-bubble .bubble-close{float:right;cursor:pointer;color:var(--dim);margin-left:6px;font-size:.9rem}
+.mascot-body{width:72px;height:72px;cursor:pointer;position:relative;right:0}
+.mascot-svg{width:72px;height:72px;filter:drop-shadow(0 0 10px rgba(0,245,212,.5))}
+
+/* ========== PASSWORD LEVEL ========== */
+.pw-builder{background:var(--panel2);border-radius:12px;padding:18px;margin-bottom:16px}
+.pw-display{font-family:'Orbitron',monospace;font-size:1rem;letter-spacing:3px;padding:12px;background:rgba(0,0,0,.4);border:2px solid var(--dim);border-radius:8px;min-height:48px;margin-bottom:10px;transition:border-color .3s;word-break:break-all;color:var(--dim)}
+.pw-display.weak{border-color:var(--accent3);color:var(--accent3)}
+.pw-display.medium{border-color:var(--accent2);color:var(--accent2)}
+.pw-display.strong{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
+.str-bar-wrap{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.str-bar{height:100%;width:0;border-radius:3px;transition:all .5s}
+.str-label{font-size:.75rem;text-align:right;margin-bottom:12px}
+.crack-time{text-align:center;padding:8px;background:rgba(0,0,0,.3);border-radius:8px;font-size:.82rem;color:var(--dim)}
+.crack-time strong{font-family:'Orbitron',monospace}
+.pw-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.pw-chip{padding:7px 12px;border-radius:18px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;user-select:none}
+.pw-chip.uppercase{background:rgba(83,82,237,.3);color:#a29bfe;border:1px solid var(--accent4)}
+.pw-chip.number{background:rgba(247,183,49,.3);color:var(--accent2);border:1px solid var(--accent2)}
+.pw-chip.symbol{background:rgba(255,71,87,.3);color:#ff8a8a;border:1px solid var(--accent3)}
+.pw-chip.word{background:rgba(0,245,212,.15);color:var(--accent);border:1px solid rgba(0,245,212,.4)}
+.pw-chip:hover{transform:translateY(-2px);filter:brightness(1.2)}
+.pw-chip.used{opacity:.25;cursor:default;transform:none}
+
+/* ========== PHISHING LEVEL ========== */
+.email-container{background:#1a1a2e;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.email-header-bar{background:#16213e;padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.email-field{margin-bottom:5px;font-size:.82rem}
+.email-field .lbl{color:var(--dim);margin-right:6px}
+.email-subject{font-size:.95rem;font-weight:700;color:var(--text);margin-top:6px}
+.email-body{padding:16px;font-size:.85rem;line-height:1.8;color:#c0cfe0}
+.highlight{background:rgba(255,71,87,.15);border:1px dashed var(--accent3);padding:1px 5px;border-radius:4px;cursor:pointer;transition:all .2s;position:relative}
+.highlight:hover{background:rgba(255,71,87,.35)}
+.highlight.found{background:rgba(255,71,87,.45);cursor:default}
+.clue-tag{padding:3px 10px;border-radius:10px;font-size:.72rem;background:rgba(255,71,87,.2);border:1px solid var(--accent3);color:#ff8a8a;animation:pop .3s ease;display:inline-block;margin:3px}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.clues-row{margin-bottom:12px}
+
+/* ========== SOCIAL MEDIA LEVEL ========== */
+.social-profile{background:var(--panel2);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:14px;border:1px solid rgba(255,255,255,.08)}
+.profile-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.choice-cards{display:flex;flex-direction:column;gap:9px}
+.choice-card{padding:13px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;font-size:.88rem;background:var(--panel2);display:flex;align-items:center;gap:10px}
+.choice-card:hover{border-color:var(--accent);transform:translateX(4px)}
+.choice-card .ci{font-size:1.4rem}
+.choice-card.correct{border-color:var(--accent);background:rgba(0,245,212,.1)}
+.choice-card.wrong{border-color:var(--accent3);background:rgba(255,71,87,.1)}
+
+/* ========== OTP LEVEL ========== */
+.phone-ui{background:#0d0d1a;border:3px solid #2d2d5a;border-radius:24px;padding:18px;max-width:300px;margin:0 auto 16px;box-shadow:0 0 40px rgba(83,82,237,.3)}
+.call-icon{font-size:2.2rem;animation:ring 1.5s infinite}
+@keyframes ring{0%,100%{transform:rotate(0)}10%{transform:rotate(-12deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}50%{transform:rotate(0)}}
+.call-script{background:rgba(255,255,255,.05);border-radius:10px;padding:12px;font-size:.82rem;line-height:1.7;margin-bottom:12px;color:#cde8ff;border-left:3px solid var(--accent4);font-style:italic}
+.otp-reveal{text-align:center;font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:7px;color:var(--accent2);padding:10px;background:rgba(247,183,49,.1);border-radius:8px;margin-bottom:12px}
+
+/* ========== CYBERBULLYING LEVEL ========== */
+.chat-window{background:#0d1117;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.chat-header{background:#161b22;padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.chat-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.chat-messages{padding:14px;display:flex;flex-direction:column;gap:10px;max-height:200px;overflow-y:auto}
+.chat-msg{max-width:75%;padding:9px 13px;border-radius:13px;font-size:.84rem;line-height:1.5}
+.chat-msg.incoming{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.25);border-radius:13px 13px 13px 2px;align-self:flex-start;color:#ffb3bb}
+.chat-msg.outgoing{background:rgba(0,245,212,.15);border:1px solid rgba(0,245,212,.25);border-radius:13px 13px 2px 13px;align-self:flex-end}
+
+/* ========== DEEPFAKES LEVEL (NEW) ========== */
+.media-card{background:var(--panel2);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.fake-video{width:100%;height:160px;background:linear-gradient(135deg,#1a1a2e,#0d0d1a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative}
+.fake-video-play{font-size:3rem;opacity:.7}
+.fake-video-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:2px;color:var(--dim)}
+.fake-video-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1)}
+.fake-video-bar::after{content:'';display:block;height:100%;width:35%;background:var(--accent3)}
+.deepfake-clues{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.deepfake-clue{padding:10px 12px;background:var(--panel2);border:1px solid rgba(255,255,255,.08);border-radius:8px;cursor:pointer;transition:all .2s;font-size:.82rem;text-align:center}
+.deepfake-clue:hover{border-color:var(--accent);background:rgba(0,245,212,.08)}
+.deepfake-clue.selected.real{border-color:var(--accent3);background:rgba(255,71,87,.15)}
+.deepfake-clue.selected.fake{border-color:var(--accent);background:rgba(0,245,212,.15)}
+.deepfake-clue .dc-icon{font-size:1.4rem;margin-bottom:4px}
+
+/* ========== MALWARE LEVEL (NEW) ========== */
+.browser-bar{background:#1a1a2e;border-radius:8px 8px 0 0;padding:8px 14px;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08)}
+.browser-dots{display:flex;gap:5px}
+.browser-dot{width:10px;height:10px;border-radius:50%}
+.browser-url{flex:1;background:rgba(255,255,255,.06);border-radius:4px;padding:5px 10px;font-size:.78rem;color:var(--dim);font-family:monospace}
+.browser-url.danger{color:var(--accent3);border:1px solid rgba(255,71,87,.3)}
+.browser-page{background:#101728;border:1px solid rgba(255,255,255,.06);border-top:none;border-radius:0 0 8px 8px;padding:20px;min-height:160px;margin-bottom:14px}
+.popup-ad{position:relative;background:linear-gradient(135deg,#1a0a2e,#2a0a4e);border:2px solid var(--accent3);border-radius:10px;padding:16px;text-align:center;margin-bottom:10px;animation:shake 0.5s ease infinite alternate}
+@keyframes shake{from{transform:rotate(-.5deg)}to{transform:rotate(.5deg)}}
+.popup-ad-title{color:var(--accent2);font-weight:700;font-size:1.1rem;margin-bottom:6px}
+.popup-ad-body{font-size:.8rem;color:#c0cfe0;margin-bottom:12px;line-height:1.5}
+.popup-close{position:absolute;top:8px;right:10px;cursor:pointer;color:var(--dim);font-size:.9rem}
+.download-items{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.download-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:var(--panel2);cursor:pointer;transition:all .2s;font-size:.85rem}
+.download-item:hover{border-color:var(--accent);transform:translateX(3px)}
+.download-item .di-icon{font-size:1.5rem;flex-shrink:0}
+.download-item.safe{border-color:rgba(0,245,212,.3)}
+.download-item.danger-file{border-color:rgba(255,71,87,.3)}
+.download-item.selected.safe{background:rgba(0,245,212,.15)}
+.download-item.selected.danger-file{background:rgba(255,71,87,.15)}
+
+/* ========== DIGITAL FOOTPRINT LEVEL (NEW) ========== */
+.footprint-timeline{display:flex;flex-direction:column;gap:0;margin-bottom:14px;position:relative}
+.footprint-timeline::before{content:'';position:absolute;left:22px;top:20px;bottom:20px;width:2px;background:rgba(0,245,212,.15)}
+.footprint-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;position:relative}
+.fp-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:4px;border:2px solid var(--dim);transition:all .3s;position:relative;z-index:1}
+.fp-dot.visible{background:var(--accent3);border-color:var(--accent3);box-shadow:0 0 8px var(--accent3)}
+.fp-dot.hidden{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.fp-content{flex:1;background:var(--panel2);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);font-size:.82rem}
+.fp-platform{font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.fp-action{color:#8ab4d4;line-height:1.5}
+.fp-risk{font-size:.72rem;margin-top:5px;padding:3px 8px;border-radius:10px;display:inline-block}
+.fp-risk.high{background:rgba(255,71,87,.2);color:#ff8a8a;border:1px solid rgba(255,71,87,.3)}
+.fp-risk.low{background:rgba(0,245,212,.15);color:var(--accent);border:1px solid rgba(0,245,212,.3)}
+.footprint-quiz{margin-bottom:14px}
+.fp-q{font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--text)}
+
+/* ========== BOSS SCREEN ========== */
+#boss-screen{padding-top:70px}
+.boss-arena{text-align:center;max-width:680px;width:100%;padding:10px 0 20px}
+.boss-icon{font-size:70px;animation:boss-float 3s infinite ease-in-out}
+@keyframes boss-float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+.boss-name{font-family:'Orbitron',monospace;font-size:1.6rem;color:var(--accent3);text-shadow:0 0 20px rgba(255,71,87,.5);margin:8px 0 4px}
+.timer-ring{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;transition:background .1s}
+.timer-ring::before{content:'';position:absolute;width:54px;height:54px;border-radius:50%;background:var(--bg)}
+.timer-num{font-family:'Orbitron',monospace;font-size:1.2rem;color:var(--accent3);position:relative;z-index:1}
+.boss-q{font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--text);min-height:44px;padding:0 10px}
+.boss-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.boss-opt{padding:12px;border-radius:10px;background:var(--panel2);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;font-size:.85rem;color:var(--text);text-align:left;font-family:'Exo 2',sans-serif}
+.boss-opt:hover{border-color:var(--accent);background:rgba(0,245,212,.08)}
+.boss-opt.correct{border-color:var(--accent);background:rgba(0,245,212,.2);color:var(--accent)}
+.boss-opt.wrong{border-color:var(--accent3);background:rgba(255,71,87,.2);color:var(--accent3)}
+.boss-progress{display:flex;gap:5px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.q-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--dim);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-family:'Orbitron',monospace;transition:all .3s}
+.q-dot.correct{background:var(--accent);border-color:var(--accent);color:#050d1a}
+.q-dot.wrong{background:var(--accent3);border-color:var(--accent3);color:white}
+.q-dot.current{border-color:var(--accent2);animation:blink 1s infinite}
+
+/* ========== OUTCOME POPUP ========== */
+.popup-overlay{position:fixed;inset:0;z-index:200;background:rgba(5,13,26,.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.popup-overlay.show{display:flex}
+.popup-box{background:var(--panel);border-radius:16px;padding:28px;max-width:460px;width:100%;text-align:center;border:1px solid rgba(0,245,212,.3);box-shadow:0 0 60px rgba(0,245,212,.2);animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+.popup-box.bad{border-color:rgba(255,71,87,.4);box-shadow:0 0 60px rgba(255,71,87,.2)}
+.popup-icon{font-size:52px;margin-bottom:10px}
+.popup-title{font-family:'Orbitron',monospace;font-size:1.2rem;margin-bottom:6px}
+.popup-title.good{color:var(--accent)}
+.popup-title.bad{color:var(--accent3)}
+.popup-body{color:#8ab4d4;line-height:1.7;margin-bottom:16px;font-size:.9rem}
+.popup-tip{background:rgba(0,245,212,.07);border:1px solid rgba(0,245,212,.2);border-radius:10px;padding:12px;font-size:.84rem;color:var(--accent);margin-bottom:18px;text-align:left}
+.popup-tip strong{display:block;margin-bottom:4px;font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:1px}
+
+/* ========== TEACHER DASHBOARD ========== */
+#teacher-screen{padding-top:70px;gap:16px;justify-content:flex-start}
+.teacher-panel{background:var(--panel);border:1px solid rgba(83,82,237,.3);border-radius:16px;padding:24px;max-width:800px;width:100%;box-shadow:0 0 40px rgba(83,82,237,.15)}
+.teacher-panel::before{content:'';display:block;height:3px;background:linear-gradient(90deg,var(--accent4),var(--accent5));border-radius:3px 3px 0 0;margin:-24px -24px 20px;border-radius:16px 16px 0 0}
+.teacher-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.teacher-title{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--accent5)}
+.class-code-box{background:rgba(83,82,237,.15);border:2px solid var(--accent4);border-radius:12px;padding:16px 24px;text-align:center;margin-bottom:20px}
+.class-code-label{font-size:.75rem;color:var(--dim);letter-spacing:2px;font-family:'Orbitron',monospace;margin-bottom:6px}
+.class-code{font-family:'Orbitron',monospace;font-size:2.2rem;letter-spacing:10px;color:var(--accent5);text-shadow:0 0 20px rgba(162,155,254,.4)}
+.class-code-hint{font-size:.75rem;color:var(--dim);margin-top:6px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--panel2);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.08)}
+.stat-num{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;margin-bottom:4px}
+.stat-label{font-size:.72rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.student-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.student-table th{text-align:left;font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:2px;color:var(--dim);padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.student-table td{padding:10px;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem}
+.student-table tr:hover td{background:rgba(255,255,255,.03)}
+.progress-pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;border:1px solid var(--dim);color:var(--dim)}
+.pill.done{background:var(--accent);border-color:var(--accent);color:#050d1a}
+.pill.boss.done{background:var(--accent3);border-color:var(--accent3);color:white}
+.weakness-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.weakness-label{width:140px;font-size:.78rem;color:var(--text);flex-shrink:0}
+.weakness-track{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.weakness-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.weakness-pct{font-size:.75rem;color:var(--dim);width:36px;text-align:right;font-family:'Orbitron',monospace}
+.join-form{display:flex;gap:10px;flex-wrap:wrap}
+.join-form input{flex:1;min-width:160px;background:rgba(83,82,237,.08);border:2px solid rgba(83,82,237,.3);color:var(--text);font-family:'Exo 2',sans-serif;font-size:.9rem;padding:10px 14px;border-radius:8px;outline:none;transition:border-color .3s}
+.join-form input:focus{border-color:var(--accent4)}
+.tab-bar{display:flex;gap:2px;margin-bottom:16px}
+.tab-btn{flex:1;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--dim);font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.tab-btn:first-child{border-radius:8px 0 0 8px}
+.tab-btn:last-child{border-radius:0 8px 8px 0}
+.tab-btn.active{background:rgba(83,82,237,.2);border-color:var(--accent4);color:var(--accent5)}
+.tab-content{display:none}
+.tab-content.active{display:block;animation:fadeIn .3s}
+.alert-box{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);border-radius:8px;padding:12px;font-size:.82rem;color:#ff8a8a;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+/* ========== CERTIFICATE ========== */
+#cert-screen{padding-top:70px}
+.certificate{background:linear-gradient(135deg,#0a1628 0%,#0d1f40 50%,#0a1628 100%);border:3px solid var(--accent);border-radius:16px;padding:36px;max-width:580px;width:100%;text-align:center;position:relative;box-shadow:0 0 60px rgba(0,245,212,.3),inset 0 0 60px rgba(0,245,212,.05)}
+.cert-corner{position:absolute;width:36px;height:36px;border-color:var(--accent2);border-style:solid;opacity:.7}
+.cert-corner.tl{top:12px;left:12px;border-width:3px 0 0 3px}
+.cert-corner.tr{top:12px;right:12px;border-width:3px 3px 0 0}
+.cert-corner.bl{bottom:12px;left:12px;border-width:0 0 3px 3px}
+.cert-corner.br{bottom:12px;right:12px;border-width:0 3px 3px 0}
+.cert-badge{font-size:70px;margin-bottom:10px;animation:pulse-badge 2s infinite}
+.cert-title{font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.cert-main{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--accent2);margin-bottom:12px;text-shadow:0 0 20px rgba(247,183,49,.5)}
+.cert-name{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--accent);margin-bottom:8px;text-shadow:var(--glow)}
+.cert-body{color:#8ab4d4;font-size:.88rem;line-height:1.8;margin-bottom:16px}
+.cert-skills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:20px}
+.cert-skill{padding:5px 12px;background:rgba(0,245,212,.1);border:1px solid rgba(0,245,212,.3);border-radius:18px;font-size:.7rem;color:var(--accent);font-weight:600}
+.cert-score{font-family:'Orbitron',monospace;font-size:2.2rem;color:var(--accent2);text-shadow:var(--glow2)}
+.cert-score-label{font-size:.75rem;color:var(--dim);letter-spacing:2px}
+.cert-footer{font-size:.7rem;color:var(--dim);margin-top:14px;letter-spacing:1px}
+
+/* UTILITY */
+.feedback-bar{padding:9px 14px;border-radius:8px;font-size:.85rem;margin-top:10px;display:none;animation:fadeIn .3s}
+.feedback-bar.good{background:rgba(0,245,212,.14);border:1px solid rgba(0,245,212,.4);color:var(--accent);display:block}
+.feedback-bar.bad{background:rgba(255,71,87,.14);border:1px solid rgba(255,71,87,.4);color:#ff8a8a;display:block}
+.xp-flash{position:fixed;top:60px;right:20px;font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--accent2);font-weight:900;text-shadow:var(--glow2);animation:xp-rise 1.5s forwards;z-index:300;pointer-events:none}
+@keyframes xp-rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+.badge-flash{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--accent2);border-radius:12px;padding:10px 20px;font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent2);z-index:300;animation:badge-pop 3s forwards;white-space:nowrap;box-shadow:var(--glow2)}
+@keyframes badge-pop{0%{opacity:0;transform:translateX(-50%) scale(.5)}15%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,245,212,.3);border-radius:2px}
+
+/* Teacher login */
+.teacher-login{display:flex;flex-direction:column;gap:12px;max-width:360px;width:100%;background:var(--panel);border:1px solid rgba(83,82,237,.3);border-radius:16px;padding:24px}
+.teacher-login h3{font-family:'Orbitron',monospace;color:var(--accent5);margin-bottom:6px}
+.teacher-login input{background:rgba(83,82,237,.08);border:2px solid rgba(83,82,237,.3);color:var(--text);font-family:'Exo 2',sans-serif;font-size:.9rem;padding:10px 14px;border-radius:8px;outline:none}
+.teacher-login input:focus{border-color:var(--accent4)}
+
+@media(max-width:480px){
+  .boss-opts{grid-template-columns:1fr}
+  .deepfake-clues{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="starfield" id="starfield"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+
+<!-- HUD -->
+<div class="hud" id="hud" style="display:none">
+  <div class="hud-logo">🛡 SECURENET</div>
+  <div class="hud-center" id="level-dots"></div>
+  <div class="hud-right">
+    <div class="hud-xp">⚡ <span id="hud-xp">0</span></div>
+    <div class="hud-agent">AGENT: <span id="hud-name">—</span></div>
+    <button class="hud-btn" onclick="showScreen('map-screen');renderMap()">MAP</button>
+    <button class="hud-btn" onclick="toggleSound()" id="sound-btn">🔊</button>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popup">
+  <div class="popup-box" id="popup-box">
+    <div class="popup-icon" id="popup-icon">✅</div>
+    <div class="popup-title" id="popup-title">Mission Complete!</div>
+    <div class="popup-body" id="popup-body"></div>
+    <div class="popup-tip" id="popup-tip"></div>
+    <button class="btn btn-primary" id="popup-btn">CONTINUE</button>
+  </div>
+</div>
+
+<!-- MASCOT -->
+<div class="mascot-wrap" id="mascot">
+  <div class="mascot-bubble" id="mascot-bubble" style="display:none">
+    <span class="bubble-close" onclick="hideMascotBubble()">✕</span>
+    <span id="mascot-text">Hi! I'm BYTE, your cyber guide! 👋</span>
+  </div>
+  <div class="mascot-body" onclick="toggleMascotBubble()">
+    <svg class="mascot-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Robot body -->
+      <rect x="18" y="28" width="36" height="32" rx="6" fill="#0f1f3a" stroke="#00f5d4" stroke-width="2"/>
+      <!-- Head -->
+      <rect x="20" y="10" width="32" height="22" rx="8" fill="#0a1628" stroke="#00f5d4" stroke-width="2"/>
+      <!-- Eyes -->
+      <circle cx="29" cy="20" r="5" fill="#00f5d4" opacity="0.9"/>
+      <circle cx="43" cy="20" r="5" fill="#00f5d4" opacity="0.9"/>
+      <circle cx="30" cy="20" r="2" fill="#050d1a"/>
+      <circle cx="44" cy="20" r="2" fill="#050d1a"/>
+      <!-- Antenna -->
+      <line x1="36" y1="10" x2="36" y2="3" stroke="#00f5d4" stroke-width="2"/>
+      <circle cx="36" cy="2" r="2.5" fill="#f7b731"/>
+      <!-- Mouth -->
+      <rect x="27" y="27" width="18" height="3" rx="1.5" fill="#00f5d4" opacity="0.5"/>
+      <!-- Chest screen -->
+      <rect x="24" y="34" width="24" height="16" rx="4" fill="#050d1a" stroke="#5352ed" stroke-width="1.5"/>
+      <text x="36" y="46" text-anchor="middle" font-size="8" fill="#00f5d4" font-family="monospace">BYTE</text>
+      <!-- Arms -->
+      <rect x="6" y="30" width="10" height="6" rx="3" fill="#0a1628" stroke="#00f5d4" stroke-width="1.5"/>
+      <rect x="56" y="30" width="10" height="6" rx="3" fill="#0a1628" stroke="#00f5d4" stroke-width="1.5"/>
+      <!-- Legs -->
+      <rect x="23" y="59" width="10" height="10" rx="3" fill="#0a1628" stroke="#00f5d4" stroke-width="1.5"/>
+      <rect x="39" y="59" width="10" height="10" rx="3" fill="#0a1628" stroke="#00f5d4" stroke-width="1.5"/>
+    </svg>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- TITLE SCREEN -->
+<div class="screen active" id="title-screen">
+  <div class="logo-badge">🛡</div>
+  <div>
+    <div class="game-title">MISSION SECURENET</div>
+    <div class="game-subtitle" style="margin-top:6px">Cyber Hero Academy · v2.0</div>
+  </div>
+  <div class="intro-text">
+    <strong>CyberCity is under attack!</strong> Hackers, scammers, deepfakes, and malware are causing chaos. Become a <strong>Cyber Agent</strong> — protect the city across 9 missions!
+  </div>
+  <div class="name-form">
+    <label for="agentInput">YOUR AGENT CODENAME</label>
+    <input type="text" id="agentInput" placeholder="e.g. Shadow Fox, Pixel Knight..." maxlength="20"/>
+  </div>
+  <div class="title-btns">
+    <button class="btn btn-primary" onclick="startGame()" style="padding:14px 36px;font-size:.95rem">🚀 START MISSION</button>
+    <button class="btn btn-purple" onclick="showTeacherLogin()">👩‍🏫 TEACHER PORTAL</button>
+  </div>
+</div>
+
+<!-- MAP SCREEN -->
+<div class="screen" id="map-screen">
+  <div class="map-header">
+    <div class="map-title">// CYBERCITY MISSION MAP //</div>
+    <div class="map-subtitle">Select a mission to begin</div>
+  </div>
+  <div class="mission-map" id="mission-map"></div>
+</div>
+
+<!-- LEVEL SCREEN -->
+<div class="screen" id="level-screen">
+  <div class="level-card" id="level-card"></div>
+</div>
+
+<!-- BOSS SCREEN -->
+<div class="screen" id="boss-screen">
+  <div class="boss-arena" id="boss-arena"></div>
+</div>
+
+<!-- TEACHER LOGIN -->
+<div class="screen" id="teacher-login-screen">
+  <div class="teacher-login">
+    <h3>👩‍🏫 TEACHER PORTAL</h3>
+    <p style="font-size:.82rem;color:var(--dim);margin-bottom:8px">Enter the teacher password to access the dashboard.</p>
+    <input type="password" id="teacher-pw-input" placeholder="Password: teacher123" onkeydown="if(event.key==='Enter')teacherLogin()"/>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-purple" onclick="teacherLogin()" style="flex:1">LOGIN →</button>
+      <button class="btn btn-secondary" onclick="showScreen('title-screen')" style="flex:1">BACK</button>
+    </div>
+    <div style="font-size:.72rem;color:var(--dim);text-align:center">Demo password: <strong style="color:var(--accent5)">teacher123</strong></div>
+  </div>
+</div>
+
+<!-- TEACHER DASHBOARD -->
+<div class="screen" id="teacher-screen">
+  <div class="teacher-panel" style="max-height:85vh;overflow-y:auto">
+    <div class="teacher-header">
+      <div class="teacher-title">📊 TEACHER DASHBOARD</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-secondary" onclick="refreshDashboard()">↻ REFRESH</button>
+        <button class="btn btn-sm" style="background:transparent;border:1px solid var(--dim);color:var(--dim)" onclick="showScreen('title-screen')">✕ EXIT</button>
+      </div>
+    </div>
+    <!-- Class Code -->
+    <div class="class-code-box">
+      <div class="class-code-label">SHARE THIS CLASS CODE WITH STUDENTS</div>
+      <div class="class-code" id="class-code-display">CYB-2025</div>
+      <div class="class-code-hint">Students enter this code to link their progress to your dashboard</div>
+    </div>
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid"></div>
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('students')">STUDENTS</button>
+      <button class="tab-btn" onclick="switchTab('weaknesses')">WEAK AREAS</button>
+      <button class="tab-btn" onclick="switchTab('alerts')">ALERTS</button>
+      <button class="tab-btn" onclick="switchTab('join')">JOIN CODE</button>
+    </div>
+    <div class="tab-content active" id="tab-students">
+      <table class="student-table" id="student-table"></table>
+    </div>
+    <div class="tab-content" id="tab-weaknesses">
+      <div id="weakness-chart"></div>
+    </div>
+    <div class="tab-content" id="tab-alerts">
+      <div id="alerts-list"></div>
+    </div>
+    <div class="tab-content" id="tab-join">
+      <p style="font-size:.85rem;color:#8ab4d4;margin-bottom:12px">Students can join your class session by entering the code below on the login screen:</p>
+      <div class="join-form">
+        <input type="text" id="join-code-input" placeholder="Enter student code to simulate join" />
+        <button class="btn btn-purple btn-sm" onclick="simulateJoin()">SIMULATE JOIN</button>
+      </div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:10px">
+        In a real deployment, students would enter the class code at login and their scores would appear here automatically.
+      </div>
+    </div>
+    <!-- Export -->
+    <div class="export-row">
+      <button class="btn btn-sm btn-secondary" onclick="exportCSV()">📥 EXPORT CSV</button>
+      <button class="btn btn-sm btn-warning" onclick="printReport()">🖨 PRINT REPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATE -->
+<div class="screen" id="cert-screen">
+  <div class="certificate" id="cert-box">
+    <div class="cert-corner tl"></div><div class="cert-corner tr"></div>
+    <div class="cert-corner bl"></div><div class="cert-corner br"></div>
+    <div class="cert-badge">🏆</div>
+    <div class="cert-title">Cyber Hero Academy — Official Certificate</div>
+    <div class="cert-main">CYBER HERO</div>
+    <div style="font-size:.8rem;color:var(--dim);margin-bottom:6px">This certifies that</div>
+    <div class="cert-name" id="cert-name">AGENT</div>
+    <div class="cert-body">has successfully completed Mission SecureNet v2.0, demonstrating exceptional skills across 9 cyber threat scenarios. CyberCity is safer because of your expertise!</div>
+    <div class="cert-skills">
+      <div class="cert-skill">🔐 Password Pro</div>
+      <div class="cert-skill">🎣 Phishing Detector</div>
+      <div class="cert-skill">🕵 Privacy Guardian</div>
+      <div class="cert-skill">📱 OTP Shield</div>
+      <div class="cert-skill">💬 Bully Buster</div>
+      <div class="cert-skill">🎭 Deepfake Hunter</div>
+      <div class="cert-skill">🦠 Malware Blocker</div>
+      <div class="cert-skill">👣 Footprint Expert</div>
+      <div class="cert-skill">🧠 Cyber Genius</div>
+    </div>
+    <div class="cert-score" id="cert-score">0</div>
+    <div class="cert-score-label">TOTAL XP EARNED</div>
+    <div class="cert-footer">MISSION SECURENET · CYBERCITY · <span id="cert-date"></span></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-primary" onclick="window.print()">🖨 PRINT CERTIFICATE</button>
+    <button class="btn btn-secondary" onclick="restartGame()">↩ PLAY AGAIN</button>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+// ============================================================
+// AUDIO ENGINE (Web Audio API — no external files)
+// ============================================================
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol=0.3, delay=0) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration);
+  } catch(e){}
+}
+
+function sfx(name) {
+  if (!soundEnabled) return;
+  const s = { freq:[], type:'sine', dur:0.15 };
+  switch(name) {
+    case 'correct':
+      playTone(523, 'square', .12, .2);
+      playTone(659, 'square', .12, .2, .13);
+      playTone(784, 'square', .25, .2, .26);
+      break;
+    case 'wrong':
+      playTone(200, 'sawtooth', .12, .2);
+      playTone(150, 'sawtooth', .2, .2, .13);
+      break;
+    case 'levelup':
+      [523,587,659,698,784].forEach((f,i)=>playTone(f,'square',.15,.25,i*.1));
+      break;
+    case 'click':
+      playTone(880,'square',.05,.1);
+      break;
+    case 'xp':
+      playTone(1046,'sine',.1,.15);
+      playTone(1318,'sine',.1,.15,.08);
+      break;
+    case 'alert':
+      playTone(300,'square',.1,.2);
+      playTone(300,'square',.1,.2,.2);
+      playTone(300,'square',.2,.2,.4);
+      break;
+    case 'mascot':
+      playTone(660,'sine',.1,.1);
+      playTone(880,'sine',.15,.1,.1);
+      break;
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
+const state = {
+  agentName: '',
+  xp: 0,
+  completedLevels: [],
+  currentLevel: null,
+  achievements: [],
+  mistakes: 0,
+  levelMistakes: 0,
+  startTime: 0,
+  classCode: ''
+};
+
+// Simulated student roster for teacher dashboard
+const mockStudents = [
+  { name: 'Arjun S.', xp: 1120, completed: [1,2,3,4,5,6,7,8,9], mistakes: 2 },
+  { name: 'Priya K.', xp: 890, completed: [1,2,3,4,5,6,7], mistakes: 5 },
+  { name: 'Rohan M.', xp: 650, completed: [1,2,3,4,5], mistakes: 8 },
+  { name: 'Ananya T.', xp: 1350, completed: [1,2,3,4,5,6,7,8,9], mistakes: 0 },
+  { name: 'Karan P.', xp: 420, completed: [1,2,3], mistakes: 12 },
+  { name: 'Sneha R.', xp: 780, completed: [1,2,3,4,5,6], mistakes: 6 },
+  { name: 'Dev B.', xp: 200, completed: [1], mistakes: 15 },
+];
+let dashboardStudents = [...mockStudents];
+let activeTab = 'students';
+
+const LEVELS = [
+  { id:1, icon:'🔐', name:'The Password Vault', sub:'Build Strong Passwords', xp:150 },
+  { id:2, icon:'🎣', name:'The Phishing Trap', sub:'Spot Fake Emails', xp:150 },
+  { id:3, icon:'👥', name:'Social Media Danger', sub:'Stranger Danger Online', xp:150 },
+  { id:4, icon:'📱', name:'The OTP Scam', sub:'Bank Fraud Calls', xp:150 },
+  { id:5, icon:'💬', name:'Cyberbullying Rescue', sub:'Support a Friend', xp:150 },
+  { id:6, icon:'🎭', name:'The Deepfake Lab', sub:'Spot AI-Generated Fakes', xp:175, new:true },
+  { id:7, icon:'🦠', name:'Malware Maze', sub:'Avoid Dangerous Downloads', xp:175, new:true },
+  { id:8, icon:'👣', name:'Digital Footprint', sub:'Control Your Online Trace', xp:175, new:true },
+  { id:9, icon:'💀', name:'MASTER HACKER', sub:'Final Boss — All Threats!', xp:500, boss:true },
+];
+
+// ============================================================
+// STARFIELD
+// ============================================================
+(function(){
+  const sf=document.getElementById('starfield');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${(Math.random()*4+2).toFixed(1)}s;animation-delay:${(Math.random()*4).toFixed(1)}s;opacity:${(Math.random()*.5+.1).toFixed(2)}`;
+    sf.appendChild(s);
+  }
+})();
+
+// ============================================================
+// NAVIGATION & HUD
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function updateHUD() {
+  document.getElementById('hud-xp').textContent = state.xp;
+  const dots = document.getElementById('level-dots');
+  dots.innerHTML = LEVELS.map((l,i)=>`
+    <div class="level-dot ${l.boss?'boss-dot':''} ${state.completedLevels.includes(l.id)?'done':''} ${state.currentLevel===l.id?'current':''}"
+      title="${l.name}" onclick="if(${state.completedLevels.includes(l.id)||state.completedLevels.includes(LEVELS[i-1]?.id)||i===0})startLevel(${l.id})"></div>
+  `).join('');
+}
+
+function awardXP(amount) {
+  state.xp += amount;
+  document.getElementById('hud-xp').textContent = state.xp;
+  sfx('xp');
+  const f=document.createElement('div');
+  f.className='xp-flash';
+  f.textContent=`+${amount} XP`;
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),1600);
+}
+
+function awardBadge(icon, name) {
+  if (state.achievements.includes(name)) return;
+  state.achievements.push(name);
+  sfx('levelup');
+  const b=document.createElement('div');
+  b.className='badge-flash';
+  b.innerHTML=`${icon} Achievement Unlocked: <strong>${name}</strong>`;
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),3000);
+}
+
+// ============================================================
+// START GAME
+// ============================================================
+function startGame() {
+  const input = document.getElementById('agentInput').value.trim();
+  state.agentName = input || 'GHOST';
+  state.startTime = Date.now();
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('hud-name').textContent = state.agentName.toUpperCase();
+  document.getElementById('mascot').style.display='block';
+  updateHUD();
+  showMascotMsg("Welcome, Agent "+state.agentName+"! 🛡 CyberCity needs your help. Start with Level 1!", 5000);
+  showScreen('map-screen');
+  renderMap();
+}
+
+// ============================================================
+// MAP
+// ============================================================
+function renderMap() {
+  const map=document.getElementById('mission-map');
+  map.innerHTML='';
+  LEVELS.forEach((lvl,i)=>{
+    const unlocked = i===0||state.completedLevels.includes(LEVELS[i-1].id);
+    const completed = state.completedLevels.includes(lvl.id);
+    const cls = completed?'completed':!unlocked?'locked':lvl.boss?'boss-node':'';
+    if(i>0) map.innerHTML+=`<div class="connector"></div>`;
+    map.innerHTML+=`
+      <div class="mission-node ${cls}" onclick="${unlocked?`startLevel(${lvl.id})`:''}" style="cursor:${unlocked?'pointer':'not-allowed'}">
+        <div class="node-icon">${lvl.icon}${lvl.new?'<sup style="font-size:.6rem;color:var(--accent2);vertical-align:top">NEW</sup>':''}</div>
+        <div class="node-info">
+          <div class="node-name" style="color:${lvl.boss?'var(--accent3)':''}">${lvl.name}</div>
+          <div class="node-sub">${lvl.sub}</div>
+          <div class="node-xp">⚡ ${lvl.xp} XP</div>
+        </div>
+        <div class="node-status">${completed?'✅':unlocked?(lvl.boss?'⚡':'▶'):'🔒'}</div>
+      </div>`;
+  });
+}
+
+// ============================================================
+// POPUP
+// ============================================================
+function showPopup(good, icon, title, body, tip, onContinue) {
+  const box=document.getElementById('popup-box');
+  box.className='popup-box'+(good?'':' bad');
+  document.getElementById('popup-icon').textContent=icon;
+  const t=document.getElementById('popup-title');
+  t.className='popup-title '+(good?'good':'bad');
+  t.textContent=title;
+  document.getElementById('popup-body').textContent=body;
+  const tipEl=document.getElementById('popup-tip');
+  if(tip){tipEl.innerHTML=`<strong>🧠 BYTE'S TIP</strong>${tip}`;tipEl.style.display='block'}
+  else tipEl.style.display='none';
+  const btn=document.getElementById('popup-btn');
+  btn.onclick=()=>{closePopup();if(onContinue)onContinue();};
+  sfx(good?'correct':'alert');
+  document.getElementById('popup').classList.add('show');
+}
+function closePopup(){document.getElementById('popup').classList.remove('show')}
+
+function completeLevel(id, xpEarned) {
+  if(!state.completedLevels.includes(id)) state.completedLevels.push(id);
+  awardXP(xpEarned);
+  if(state.levelMistakes===0) awardBadge('⭐','Flawless — Level '+id);
+  if(state.completedLevels.length===3) awardBadge('🔥','On a Roll!');
+  if(state.completedLevels.length===8) awardBadge('🚀','Almost There!');
+  updateHUD();
+  setTimeout(()=>{
+    showScreen('map-screen');
+    renderMap();
+    if(state.completedLevels.length===9) setTimeout(showCertificate,500);
+  },400);
+}
+
+function startLevel(id) {
+  sfx('click');
+  state.currentLevel=id;
+  state.levelMistakes=0;
+  updateHUD();
+  if(id===9){showScreen('boss-screen');renderBoss();}
+  else{showScreen('level-screen');renderLevel(id);}
+}
+
+// ============================================================
+// MASCOT
+// ============================================================
+const mascotMessages = {
+  1: "Passwords should be long and mix uppercase, numbers, and symbols. 'Password123' is NOT safe! 😅",
+  2: "Always check the sender's email address VERY carefully. One letter off = FAKE! 🎣",
+  3: "Never accept friend requests from strangers — they might not be who they seem! 🕵",
+  4: "Your OTP is YOUR secret! Banks NEVER ask for it. Hang up immediately! 📵",
+  5: "If you're being bullied online, ALWAYS tell a trusted adult. You are not alone! 💪",
+  6: "Deepfakes are AI-generated videos. Look for unnatural blinking, lip sync errors, and check the source! 🤖",
+  7: "Never click 'Download' on pop-ups! Real software is found on official websites only. 🛡",
+  8: "Think before you post — your digital footprint lasts FOREVER and employers can see it! 👣",
+};
+
+function showMascotMsg(msg, duration=4000) {
+  sfx('mascot');
+  const bub=document.getElementById('mascot-bubble');
+  document.getElementById('mascot-text').textContent=msg;
+  bub.style.display='block';
+  if(duration) setTimeout(hideMascotBubble, duration);
+}
+function hideMascotBubble(){document.getElementById('mascot-bubble').style.display='none'}
+function toggleMascotBubble(){
+  const bub=document.getElementById('mascot-bubble');
+  if(bub.style.display==='none'){
+    const tip=mascotMessages[state.currentLevel]||"Stay safe online! Remember BYTE is always here to help. 🛡";
+    showMascotMsg(tip);
+  } else hideMascotBubble();
+}
+
+// ============================================================
+// RENDER LEVELS
+// ============================================================
+function renderLevel(id) {
+  const card=document.getElementById('level-card');
+  if(id===1)renderLevel1(card);
+  else if(id===2)renderLevel2(card);
+  else if(id===3)renderLevel3(card);
+  else if(id===4)renderLevel4(card);
+  else if(id===5)renderLevel5(card);
+  else if(id===6)renderLevel6(card);
+  else if(id===7)renderLevel7(card);
+  else if(id===8)renderLevel8(card);
+  setTimeout(()=>showMascotMsg(mascotMessages[id]||'Good luck, Agent! 🛡',5000),1000);
+}
+
+// --- LEVEL 1: PASSWORD VAULT ---
+const pwChips=[
+  {label:'dragon',type:'word',val:'dragon'},{label:'Sword',type:'uppercase',val:'Sword'},
+  {label:'!@#',type:'symbol',val:'!@#'},{label:'42',type:'number',val:'42'},
+  {label:'Purple',type:'uppercase',val:'Purple'},{label:'$$$',type:'symbol',val:'$$$'},
+  {label:'99',type:'number',val:'99'},{label:'night',type:'word',val:'night'},
+  {label:'X7',type:'uppercase',val:'X7'},{label:'!!',type:'symbol',val:'!!'},
+];
+let pw1={selected:[],chips:[...pwChips]};
+
+function renderLevel1(card){
+  pw1={selected:[],chips:[...pwChips]};
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">🔐</div>
+    <div class="level-info"><div class="level-num">Level 01</div><div class="level-title">The Password Vault</div></div>
+  </div>
+  <div class="level-desc">The hacker cracked weak passwords! Build an <strong>UNBREAKABLE password</strong> by combining uppercase letters, numbers, symbols, and words.</div>
+  <div class="pw-builder">
+    <div class="pw-display" id="pw-display">Click chips below to build your password...</div>
+    <div class="str-bar-wrap"><div class="str-bar" id="str-bar"></div></div>
+    <div class="str-label" id="str-label" style="color:var(--dim)">Add more elements to strengthen!</div>
+    <div class="crack-time">Crack time: <strong id="crack-time">instantly</strong></div>
+  </div>
+  <div style="font-size:.72rem;color:var(--dim);margin-bottom:8px;font-family:'Orbitron',monospace;letter-spacing:1px">CLICK TO ADD INGREDIENTS:</div>
+  <div class="pw-chips" id="pw-chips"></div>
+  <div style="display:flex;gap:10px"><button class="btn btn-secondary btn-sm" onclick="resetPw1()">↩ RESET</button>
+  <button class="btn btn-primary" id="pw-submit" onclick="submitPw1()" disabled>SECURE THE VAULT →</button></div>`;
+  renderPwChips();
+}
+function renderPwChips(){
+  const el=document.getElementById('pw-chips');
+  if(!el)return;
+  el.innerHTML=pw1.chips.map((c,i)=>`<button class="pw-chip ${c.type} ${pw1.selected.find(x=>x.label===c.label)?'used':''}" onclick="addPwChip(${i})">${c.label}</button>`).join('');
+}
+function addPwChip(i){
+  sfx('click');
+  const chip=pw1.chips[i];
+  if(pw1.selected.find(x=>x.label===chip.label))return;
+  pw1.selected.push(chip);updatePw1();
+}
+function resetPw1(){pw1.selected=[];updatePw1();}
+function updatePw1(){
+  const pw=pw1.selected.map(c=>c.val).join('');
+  const display=document.getElementById('pw-display');
+  const bar=document.getElementById('str-bar');
+  const label=document.getElementById('str-label');
+  const crackEl=document.getElementById('crack-time');
+  const submitBtn=document.getElementById('pw-submit');
+  if(!display)return;
+  display.textContent=pw||'Click chips below to build your password...';
+  const hasU=pw1.selected.some(c=>c.type==='uppercase');
+  const hasN=pw1.selected.some(c=>c.type==='number');
+  const hasS=pw1.selected.some(c=>c.type==='symbol');
+  const hasW=pw1.selected.some(c=>c.type==='word');
+  const count=[hasU,hasN,hasS,hasW].filter(Boolean).length;
+  const len=pw.length;
+  let strength=0;
+  if(len>=4)strength=1;
+  if(len>=6&&count>=2)strength=2;
+  if(len>=8&&count>=3)strength=3;
+  if(len>=10&&count>=4)strength=4;
+  const cols=['#444','var(--accent3)','var(--accent2)','#a8ff78','var(--accent)'];
+  const labs=['','Weak','Fair','Strong 💪','Unbreakable! 🚀'];
+  const times=['instantly','2 minutes','3 years','1,000 years','1 Billion Years'];
+  const widths=[0,25,50,75,100];
+  bar.style.width=widths[strength]+'%';bar.style.background=cols[strength];
+  label.textContent=labs[strength]||'';label.style.color=cols[strength];
+  crackEl.textContent=times[strength];
+  display.className='pw-display '+(['','weak','medium','strong','strong'][strength]);
+  if(submitBtn)submitBtn.disabled=strength<3;
+  renderPwChips();
+}
+function submitPw1(){
+  showPopup(true,'🔐','Vault Secured!','You built a super-strong password! CyberCity\'s vault is now protected.',
+  'Strong password rules: Mix UPPERCASE + lowercase + numbers + symbols. Make it 12+ characters. Use a different password for every account. Try a password manager!',
+  ()=>completeLevel(1,150));
+}
+
+// --- LEVEL 2: PHISHING ---
+let foundClues2=[];
+function renderLevel2(card){
+  foundClues2=[];
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">🎣</div>
+    <div class="level-info"><div class="level-num">Level 02</div><div class="level-title">The Phishing Trap</div></div>
+  </div>
+  <div class="level-desc">A suspicious email arrived! <strong>Click all 4 red flags</strong> to expose this phishing attempt before the citizen falls for it!</div>
+  <div class="email-container">
+    <div class="email-header-bar">
+      <div class="email-field"><span class="lbl">FROM:</span>
+        <span class="highlight" data-clue="domain" onclick="markClue2(this,'domain','🚩 Fake Domain (.ru instead of .com)')">security@amaz0n-support.helpdesk.ru</span></div>
+      <div class="email-field"><span class="lbl">TO:</span><span>citizen@cybercity.net</span></div>
+      <div class="email-subject">⚠️ URGENT: Your account will be SUSPENDED in 24 hours!</div>
+    </div>
+    <div class="email-body">
+      Dear <span class="highlight" data-clue="greeting" onclick="markClue2(this,'greeting','🚩 Generic Greeting (no real name used)')">Valued Customer</span>,<br><br>
+      We detected suspicious activity. <span class="highlight" data-clue="urgency" onclick="markClue2(this,'urgency','🚩 Urgency & Fear Tactics')">You MUST verify your account within 24 hours or it will be PERMANENTLY DELETED!</span><br><br>
+      Click here to verify: <span class="highlight" data-clue="link" onclick="markClue2(this,'link','🚩 Suspicious Link (not real Amazon)')">🔗 http://amaz0n-verify.ru/urgent-login</span><br><br>
+      — The Security Team
+    </div>
+  </div>
+  <div class="clues-row"><span style="font-size:.72rem;color:var(--dim);font-family:'Orbitron',monospace;letter-spacing:1px">FOUND (<span id="clue-cnt">0</span>/4): </span>
+  <span id="clue-tags"></span></div>
+  <button class="btn btn-danger" id="phish-submit" onclick="submitPhish2()" disabled>🚨 REPORT THIS EMAIL →</button>`;
+}
+function markClue2(el,id,label){
+  if(foundClues2.includes(id))return;
+  sfx('correct');
+  foundClues2.push(id);el.classList.add('found');el.onclick=null;
+  document.getElementById('clue-tags').innerHTML+=`<span class="clue-tag">${label}</span>`;
+  document.getElementById('clue-cnt').textContent=foundClues2.length;
+  if(document.getElementById('phish-submit'))document.getElementById('phish-submit').disabled=foundClues2.length<4;
+}
+function submitPhish2(){
+  showPopup(true,'🎣','Phishing Blocked!','You spotted all 4 red flags and saved the citizen from getting hacked!',
+  'Always check: the sender email address, watch for urgency/threats, hover over links before clicking. Real companies NEVER ask for passwords via email!',
+  ()=>completeLevel(2,150));
+}
+
+// --- LEVEL 3: SOCIAL MEDIA ---
+function renderLevel3(card){
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">👥</div>
+    <div class="level-info"><div class="level-num">Level 03</div><div class="level-title">Social Media Danger</div></div>
+  </div>
+  <div class="level-desc">A citizen received this friend request. Help them decide the right response!</div>
+  <div class="social-profile">
+    <div class="profile-avatar" style="background:linear-gradient(135deg,#e74c3c,#8e44ad)">😈</div>
+    <div>
+      <div style="font-weight:700">xXShadowHunterXx</div>
+      <div style="font-size:.78rem;color:var(--dim)">0 mutual friends · Profile created 2 days ago · 0 posts</div>
+      <div style="font-size:.78rem;color:var(--accent3);margin-top:4px">⚠ Looks suspicious — brand new empty profile</div>
+    </div>
+  </div>
+  <div style="font-size:.84rem;color:#8ab4d4;margin-bottom:14px;background:rgba(255,255,255,.05);padding:12px;border-radius:8px;line-height:1.6">
+    💬 "Hey! You look cool! Let's be friends. What school do you go to? I want to come visit sometime 😊"
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:2px;color:var(--accent);margin-bottom:10px">WHAT SHOULD THE CITIZEN DO?</div>
+  <div class="choice-cards">
+    <div class="choice-card" onclick="level3Choice(this,false)"><div class="ci">✅</div><div><strong>Accept</strong> — They seem friendly, what's the harm?</div></div>
+    <div class="choice-card" onclick="level3Choice(this,false)"><div class="ci">🙈</div><div><strong>Ignore</strong> — Don't respond, hope they stop</div></div>
+    <div class="choice-card" onclick="level3Choice(this,true)"><div class="ci">🚨</div><div><strong>Decline & Report</strong> — Report as a suspicious account</div></div>
+  </div>
+  <div class="feedback-bar" id="social-fb"></div>`;
+}
+function level3Choice(el,correct){
+  sfx(correct?'correct':'wrong');
+  document.querySelectorAll('.choice-card').forEach(c=>{c.onclick=null;c.style.cursor='default'});
+  el.classList.add(correct?'correct':'wrong');
+  const fb=document.getElementById('social-fb');
+  if(!correct){
+    state.levelMistakes++;state.mistakes++;
+    fb.className='feedback-bar bad';fb.textContent='❌ Not the safest choice! Always REPORT and block suspicious accounts.';
+    setTimeout(()=>{const cards=document.querySelectorAll('.choice-card');if(cards[2]){cards[2].classList.add('correct');cards[2].onclick=()=>level3Choice(cards[2],true)}},1500);
+  } else {
+    fb.className='feedback-bar good';fb.textContent='✅ Perfect! Reporting protects you and others.';
+    setTimeout(()=>showPopup(true,'🕵','Stranger Danger Spotted!','You correctly identified and reported a suspicious stranger. Unknown persons should always be reported!',
+    'NEVER share your school name or address with strangers online. If someone you don\'t know contacts you online, tell a trusted adult and use the Report button!',
+    ()=>completeLevel(3,150)),1000);
+  }
+}
+
+// --- LEVEL 4: OTP ---
+function renderLevel4(card){
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">📱</div>
+    <div class="level-info"><div class="level-num">Level 04</div><div class="level-title">The OTP Scam Attack</div></div>
+  </div>
+  <div class="level-desc">A citizen is receiving a suspicious phone call. Choose the correct response!</div>
+  <div class="phone-ui">
+    <div style="text-align:center;padding:14px;background:rgba(83,82,237,.1);border-radius:12px;margin-bottom:14px">
+      <div class="call-icon">📞</div>
+      <div style="font-family:'Orbitron',monospace;margin:6px 0 3px;font-size:1rem">+91 98765 43210</div>
+      <div style="font-size:.72rem;color:var(--dim)">Unknown · Possible Spam</div>
+    </div>
+    <div class="call-script">"Hello! This is Mr. Sharma from National Bank's fraud department. We've detected suspicious activity. To protect your account immediately, please tell me the OTP that was just sent to your phone."</div>
+    <div class="otp-reveal">4  7  8  2  9  1</div>
+  </div>
+  <div class="choice-cards">
+    <div class="choice-card" onclick="level4Choice(this,false)"><div class="ci">📢</div><div><strong>Share the OTP</strong> — The bank needs it to protect the account!</div></div>
+    <div class="choice-card" onclick="level4Choice(this,false)"><div class="ci">🤔</div><div><strong>Ask for employee ID</strong> then share OTP</div></div>
+    <div class="choice-card" onclick="level4Choice(this,true)"><div class="ci">🚫</div><div><strong>Hang up. Never share OTP.</strong> Call the bank's official number directly.</div></div>
+  </div>
+  <div class="feedback-bar" id="otp-fb"></div>`;
+}
+function level4Choice(el,correct){
+  sfx(correct?'correct':'wrong');
+  document.querySelectorAll('.choice-card').forEach(c=>{c.onclick=null;c.style.cursor='default'});
+  el.classList.add(correct?'correct':'wrong');
+  const fb=document.getElementById('otp-fb');
+  if(!correct){
+    state.levelMistakes++;state.mistakes++;
+    fb.className='feedback-bar bad';fb.textContent='❌ NEVER share OTPs! Scammers can fake employee IDs too!';
+    setTimeout(()=>{const c=document.querySelectorAll('.choice-card');if(c[2]){c[2].classList.add('correct');c[2].onclick=()=>level4Choice(c[2],true)}},1500);
+  } else {
+    fb.className='feedback-bar good';fb.textContent='✅ Brilliant! Hang up and call the real bank.';
+    setTimeout(()=>showPopup(true,'📱','OTP Scam Blocked!','You saved the citizen from losing their savings! Real banks NEVER ask for OTPs.',
+    'Golden Rule: NEVER share your OTP with ANYONE — not your bank, not police, not family. OTP = Your Secret Code ONLY.',
+    ()=>completeLevel(4,150)),1000);
+  }
+}
+
+// --- LEVEL 5: CYBERBULLYING ---
+function renderLevel5(card){
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">💬</div>
+    <div class="level-info"><div class="level-num">Level 05</div><div class="level-title">Cyberbullying Rescue</div></div>
+  </div>
+  <div class="level-desc">Your friend Priya is being cyberbullied. Give her the RIGHT advice to stop it!</div>
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-avatar" style="background:linear-gradient(135deg,var(--accent3),#8e44ad)">👧</div>
+      <div><div style="font-weight:700;font-size:.88rem">Priya (friend)</div><div style="font-size:.68rem;color:var(--dim)">Online</div></div>
+    </div>
+    <div class="chat-messages">
+      <div class="chat-msg incoming">hey... i saw what they posted about you 😟</div>
+      <div class="chat-msg outgoing">what do u mean??</div>
+      <div class="chat-msg incoming">Jake's group made a fake profile of you and they're sharing embarrassing photos in the class chat 😢</div>
+      <div class="chat-msg outgoing">omg that's SO mean and wrong!! im so upset 😭</div>
+      <div class="chat-msg incoming">what should i do?? i feel like it's never going to stop...</div>
+    </div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:2px;color:var(--accent);margin-bottom:10px">WHAT DO YOU TELL PRIYA TO DO?</div>
+  <div class="choice-cards">
+    <div class="choice-card" onclick="level5Choice(this,false)"><div class="ci">😤</div><div><strong>Fight back</strong> — Post mean things about Jake too</div></div>
+    <div class="choice-card" onclick="level5Choice(this,false)"><div class="ci">🙈</div><div><strong>Ignore it</strong> — Don't give them attention, it'll stop</div></div>
+    <div class="choice-card" onclick="level5Choice(this,true)"><div class="ci">🛡</div><div><strong>Screenshot evidence → Report fake profile → Block → Tell a trusted adult</strong></div></div>
+  </div>
+  <div class="feedback-bar" id="cyber-fb"></div>`;
+}
+function level5Choice(el,correct){
+  sfx(correct?'correct':'wrong');
+  document.querySelectorAll('.choice-card').forEach(c=>{c.onclick=null;c.style.cursor='default'});
+  el.classList.add(correct?'correct':'wrong');
+  const fb=document.getElementById('cyber-fb');
+  if(!correct){
+    state.levelMistakes++;state.mistakes++;
+    fb.className='feedback-bar bad';fb.textContent='❌ Fighting back or ignoring doesn\'t stop bullying. Screenshot → Report → Block → Tell an adult!';
+    setTimeout(()=>{const c=document.querySelectorAll('.choice-card');if(c[2]){c[2].classList.add('correct');c[2].onclick=()=>level5Choice(c[2],true)}},1500);
+  } else {
+    fb.className='feedback-bar good';fb.textContent='✅ Perfect! That\'s exactly what Priya should do.';
+    setTimeout(()=>showPopup(true,'💬','Cyberbullying Stopped!','Priya saved evidence, reported the fake profile, blocked the bully, and got adult help. The school took action!',
+    'If cyberbullied: 1) Don\'t respond to bullies 2) Screenshot everything as evidence 3) Report & Block 4) Tell a trusted adult — parent, teacher, or counselor.',
+    ()=>completeLevel(5,150)),1000);
+  }
+}
+
+// ============================================================
+// LEVEL 6: DEEPFAKE LAB (NEW)
+// ============================================================
+let deepfakeSelected = {};
+const deepfakeItems = [
+  { id:'blur', label:'Blurry edges around face', icon:'🔍', fake:true, explanation:'Deepfakes often have unnatural blurring where the AI-generated face meets the real background.' },
+  { id:'blink', label:'Unnatural blinking pattern', icon:'👁', fake:true, explanation:'Early deepfakes often missed natural eye blinking. Irregular or absent blinking is a red flag.' },
+  { id:'shadow', label:'Lighting matches background', icon:'☀️', fake:false, explanation:'Consistent lighting is actually normal. Deepfakes often get lighting WRONG, not right.' },
+  { id:'audio', label:'Lips don\'t match audio', icon:'👄', fake:true, explanation:'Lip-sync errors are a major deepfake tell. Watch lips carefully — do they perfectly match what\'s being said?' },
+  { id:'texture', label:'Smooth, perfect skin texture', icon:'✨', fake:false, explanation:'Real people have pores, imperfections. Suspiciously perfect skin can indicate AI generation.' },
+  { id:'source', label:'No credible news source', icon:'📰', fake:true, explanation:'Always verify videos through trusted news outlets. If you can\'t find it elsewhere, it\'s likely fake.' },
+];
+
+function renderLevel6(card){
+  deepfakeSelected = {};
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">🎭</div>
+    <div class="level-info"><div class="level-num">Level 06 — NEW</div><div class="level-title">The Deepfake Lab</div></div>
+  </div>
+  <div class="level-desc">A viral video claims a politician said something shocking. But is it REAL or a <strong>DEEPFAKE</strong>? Identify all the fake signs to expose it!</div>
+  <div class="media-card">
+    <div class="fake-video">
+      <div class="fake-video-play">▶️</div>
+      <div class="fake-video-label">BREAKING: "Politician Confession" — 2.3M views</div>
+      <div class="fake-video-bar"></div>
+    </div>
+    <div style="padding:10px 14px;font-size:.8rem;color:var(--dim);border-top:1px solid rgba(255,255,255,.06)">
+      Shared by: @TruthReveal2025 · Source: unknown · Comments disabled
+    </div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:1px;color:var(--accent);margin-bottom:10px">
+    SELECT ALL SIGNS THAT THIS IS A DEEPFAKE:
+  </div>
+  <div class="deepfake-clues" id="df-clues">
+    ${deepfakeItems.map(item=>`
+      <div class="deepfake-clue" id="dfc-${item.id}" onclick="selectDfClue('${item.id}',${item.fake})">
+        <div class="dc-icon">${item.icon}</div>
+        <div>${item.label}</div>
+      </div>`).join('')}
+  </div>
+  <div style="font-size:.78rem;color:var(--dim);margin-bottom:12px" id="df-feedback-text">Click the clues that indicate a deepfake (there are 4).</div>
+  <button class="btn btn-danger" id="df-submit" onclick="submitDeepfake()" disabled>🎭 EXPOSE THE DEEPFAKE →</button>`;
+}
+
+function selectDfClue(id, isFake) {
+  sfx('click');
+  if(deepfakeSelected[id] !== undefined) return;
+  deepfakeSelected[id] = isFake;
+  const el = document.getElementById('dfc-'+id);
+  el.classList.add('selected', isFake ? 'fake' : 'real');
+  el.onclick = null;
+  if(isFake) sfx('correct'); else { sfx('wrong'); state.levelMistakes++; state.mistakes++; }
+  const fakeFound = Object.values(deepfakeSelected).filter(v=>v).length;
+  const totalSelected = Object.keys(deepfakeSelected).length;
+  document.getElementById('df-feedback-text').textContent = `Deepfake signs found: ${fakeFound}/4 | Selected: ${totalSelected}`;
+  const btn = document.getElementById('df-submit');
+  if(btn) btn.disabled = fakeFound < 4;
+}
+
+function submitDeepfake(){
+  showPopup(true,'🎭','Deepfake Exposed!','You identified all 4 signs of an AI-generated video. The viral video was confirmed fake and removed!',
+  'Deepfake red flags: Blurry face edges, unnatural blinking, lip-sync errors, no credible source. Always verify shocking videos on trusted news sites before sharing!',
+  ()=>completeLevel(6,175));
+}
+
+// ============================================================
+// LEVEL 7: MALWARE MAZE (NEW)
+// ============================================================
+const downloadItems = [
+  { icon:'📥', name:'FreeRobux_HACK.exe', size:'4.2 MB', source:'random-site.ru', danger:true, why:'".exe" files from unknown websites are malware. Never download game hacks!' },
+  { icon:'🎮', name:'Minecraft_v1.20_official.apk', size:'45 MB', source:'minecraft.net (official)', danger:false, why:'This is from the official Minecraft website. Always download from official sources.' },
+  { icon:'🎁', name:'WIN_iPhone15_FREE.zip', size:'0.1 MB', source:'prize-claim-now.xyz', danger:true, why:'Prizes you didn\'t enter for are always scams. ".xyz" domains are a red flag.' },
+  { icon:'📄', name:'School_Assignment.pdf.exe', size:'2.1 MB', source:'email attachment', danger:true, why:'Double extensions (.pdf.exe) are a trick — this is actually a dangerous program, not a PDF!' },
+];
+let malwareSelected = {};
+
+function renderLevel7(card){
+  malwareSelected = {};
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">🦠</div>
+    <div class="level-info"><div class="level-num">Level 07 — NEW</div><div class="level-title">Malware Maze</div></div>
+  </div>
+  <div class="level-desc">The citizen's browser is full of danger! First, <strong>close the pop-up</strong>. Then <strong>identify the dangerous download</strong>.</div>
+  <div class="browser-bar">
+    <div class="browser-dots">
+      <div class="browser-dot" style="background:#ff5f57"></div>
+      <div class="browser-dot" style="background:#ffbd2e"></div>
+      <div class="browser-dot" style="background:#28c940"></div>
+    </div>
+    <div class="browser-url danger" id="mal-url">http://free-downloads-4u.xyz/hacks</div>
+  </div>
+  <div class="browser-page">
+    <div class="popup-ad" id="popup-ad">
+      <div class="popup-close" onclick="closePopupAd()">✕</div>
+      <div class="popup-ad-title">🎉 YOU WON!! 🎉</div>
+      <div class="popup-ad-body">Congratulations! You are the 1,000,000th visitor! Click below to claim your FREE iPhone 15 Pro NOW! Offer expires in: <strong style="color:var(--accent3)">00:59</strong></div>
+      <button class="btn btn-warning btn-sm" onclick="popupAdClick()">CLAIM FREE PRIZE NOW!</button>
+    </div>
+    <div id="popup-ad-closed" style="display:none;text-align:center;padding:20px;color:var(--accent);font-size:.9rem">✅ Good — you closed the pop-up without clicking it!</div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:1px;color:var(--accent);margin-bottom:10px">NOW: WHICH FILES ARE DANGEROUS TO DOWNLOAD?</div>
+  <div class="download-items" id="dl-items">
+    ${downloadItems.map((item,i)=>`
+      <div class="download-item ${item.danger?'danger-file':'safe'}" id="dl-${i}" onclick="selectDownload(${i})">
+        <div class="di-icon">${item.icon}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:.85rem">${item.name}</div>
+          <div style="font-size:.72rem;color:var(--dim)">${item.size} · ${item.source}</div>
+        </div>
+        <div style="font-size:.8rem;color:var(--dim)">▼</div>
+      </div>`).join('')}
+  </div>
+  <div class="feedback-bar" id="mal-fb"></div>
+  <button class="btn btn-danger" id="mal-submit" onclick="submitMalware()" disabled style="margin-top:10px">🦠 BLOCK MALWARE →</button>`;
+}
+
+let popupAdClosed = false;
+function closePopupAd(){
+  sfx('correct');
+  document.getElementById('popup-ad').style.display='none';
+  document.getElementById('popup-ad-closed').style.display='block';
+  popupAdClosed = true;
+}
+function popupAdClick(){
+  sfx('wrong');
+  state.levelMistakes++;state.mistakes++;
+  const fb = document.getElementById('mal-fb');
+  if(fb){fb.className='feedback-bar bad';fb.textContent='❌ Never click prize pop-ups! They install malware. Always use the X button to close them.';}
+}
+
+let malDangerSelected = 0;
+function selectDownload(i){
+  sfx('click');
+  if(malwareSelected[i]!==undefined)return;
+  const item = downloadItems[i];
+  malwareSelected[i] = item.danger;
+  const el = document.getElementById('dl-'+i);
+  el.classList.add('selected', item.danger ? 'danger-file' : 'safe');
+  el.onclick = null;
+  const fb = document.getElementById('mal-fb');
+  if(fb){
+    fb.className = item.danger ? 'feedback-bar bad' : 'feedback-bar good';
+    fb.textContent = (item.danger ? '🦠 DANGER: ' : '✅ SAFE: ') + item.why;
+    fb.style.display='block';
+  }
+  if(item.danger) sfx('wrong'); else sfx('correct');
+  malDangerSelected = Object.entries(malwareSelected).filter(([,v])=>v).length;
+  const btn = document.getElementById('mal-submit');
+  if(btn) btn.disabled = malDangerSelected < 3;
+}
+
+function submitMalware(){
+  showPopup(true,'🦠','Malware Blocked!','You identified the dangerous files and protected the citizen\'s computer from infection!',
+  'Safe download rules: Only download from official websites. Watch out for .exe files from unknown sources, double extensions (.pdf.exe), fake prize sites, and "hacks" for games.',
+  ()=>completeLevel(7,175));
+}
+
+// ============================================================
+// LEVEL 8: DIGITAL FOOTPRINT (NEW)
+// ============================================================
+const footprintData = [
+  { platform:'📸 Instagram', action:'Posted a photo showing school uniform badge + location tag', visible:true, risk:'high', riskLabel:'HIGH RISK — Reveals school name & location to strangers!' },
+  { platform:'🎮 Gaming Chat', action:'Username "ArjunDelhi2010" used in public server', visible:true, risk:'high', riskLabel:'HIGH RISK — Reveals real name, city, and birth year!' },
+  { platform:'🛒 Online Shopping', action:'Bought school supplies — order history stored', visible:false, risk:'low', riskLabel:'LOW RISK — Private to the shopping site only.' },
+  { platform:'🐦 Twitter/X', action:'Replied angrily to a celebrity: "You\'re an idiot!"', visible:true, risk:'high', riskLabel:'HIGH RISK — Public forever. Employers can see this in 10 years!' },
+  { platform:'📧 Google Account', action:'Signed in to class assignment portal', visible:false, risk:'low', riskLabel:'LOW RISK — School login, managed and private.' },
+];
+let fp8Answers = {};
+
+function renderLevel8(card){
+  fp8Answers = {};
+  card.innerHTML=`
+  <div class="level-header"><div class="level-icon">👣</div>
+    <div class="level-info"><div class="level-num">Level 08 — NEW</div><div class="level-title">Digital Footprint</div></div>
+  </div>
+  <div class="level-desc">Arjun thinks his online activity disappears after he logs out. <strong>Help him see what his digital footprint really looks like</strong> and which actions are risky!</div>
+  <div class="footprint-timeline">
+    ${footprintData.map((item,i)=>`
+      <div class="footprint-item">
+        <div class="fp-dot ${item.visible?'visible':'hidden'}" title="${item.visible?'Publicly visible':'Private'}"></div>
+        <div class="fp-content">
+          <div class="fp-platform">${item.platform} <span class="fp-risk ${item.risk}">${item.riskLabel}</span></div>
+          <div class="fp-action">${item.action}</div>
+        </div>
+      </div>`).join('')}
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:1px;color:var(--accent);margin-bottom:10px">QUIZ: WHAT SHOULD ARJUN DO?</div>
+  <div class="footprint-quiz">
+    <div class="fp-q">If Arjun wants to protect his privacy, what should he change first?</div>
+    <div class="choice-cards">
+      <div class="choice-card" onclick="level8Choice(this,false)"><div class="ci">🎮</div><div><strong>Delete his gaming account</strong> entirely</div></div>
+      <div class="choice-card" onclick="level8Choice(this,true)"><div class="ci">🔒</div><div><strong>Remove location tags, use anonymous username, set profiles to private</strong></div></div>
+      <div class="choice-card" onclick="level8Choice(this,false)"><div class="ci">📵</div><div><strong>Stop using the internet</strong> completely</div></div>
+    </div>
+    <div class="feedback-bar" id="fp-fb"></div>
+  </div>`;
+}
+
+function level8Choice(el, correct){
+  sfx(correct?'correct':'wrong');
+  document.querySelectorAll('.choice-card').forEach(c=>{c.onclick=null;c.style.cursor='default'});
+  el.classList.add(correct?'correct':'wrong');
+  const fb=document.getElementById('fp-fb');
+  if(!correct){
+    state.levelMistakes++;state.mistakes++;
+    fb.className='feedback-bar bad';fb.textContent='❌ You don\'t need to delete everything! Just be smarter about what you share publicly.';
+    setTimeout(()=>{const c=document.querySelectorAll('.choice-card');if(c[1]){c[1].classList.add('correct');c[1].onclick=()=>level8Choice(c[1],true)}},1500);
+  } else {
+    fb.className='feedback-bar good';fb.textContent='✅ Exactly! Privacy settings + anonymous usernames + no location tags = safer online life.';
+    setTimeout(()=>showPopup(true,'👣','Digital Footprint Mapped!','Arjun now understands that everything posted online is potentially permanent. He updated his privacy settings!',
+    'Your digital footprint includes: photos, comments, usernames, and accounts. Employers, universities, and strangers can find it. Think before you post — can you stand behind this forever?',
+    ()=>completeLevel(8,175)),1000);
+  }
+}
+
+// ============================================================
+// FINAL BOSS
+// ============================================================
+const bossQuestions = [
+  {q:'You get an email saying "CLICK NOW or lose your account!" What\'s the red flag?',opts:['Friendly tone','Urgency & fear tactics','Uses your real name','Has a logo'],ans:1},
+  {q:'A stranger DMs asking where you live. What do you do?',opts:['Tell them — they seem nice','Ignore and hope they stop','Block & Report immediately','Ask them why they want to know'],ans:2},
+  {q:'Which is the STRONGEST password?',opts:['password123','MyName2010','Dr@g0n$kyW!ng#9','ABCDEFGH'],ans:2},
+  {q:'Someone calls: "I\'m from your bank — share your OTP to protect your account." You should:',opts:['Share the OTP quickly','Ask for employee ID first','Hang up and call bank\'s official number','Share only 3 digits'],ans:2},
+  {q:'A video goes viral showing a celebrity saying something shocking. What\'s the FIRST thing you do?',opts:['Share it everywhere','Check if it\'s on trusted news sites first','Believe it — it\'s a video!','Comment about it'],ans:1},
+  {q:'Which file is MOST likely to be malware?',opts:['homework.docx from teacher','game_hack_free.exe from a forum','photo.jpg from friend','textbook.pdf from school site'],ans:1},
+  {q:'Your classmate posts mean comments about someone online. You should:',opts:['Join in — it\'s funny','Report it and support the victim','Screenshot and gossip','Ignore it completely'],ans:1},
+  {q:'What is a "digital footprint"?',opts:['Your shoe size stored online','Your online activity trail that can be seen by others','A type of malware','A password manager'],ans:1},
+  {q:'You receive a message: "You\'ve won a FREE iPhone! Click to claim!" This is most likely:',opts:['A real prize','A phishing/scam attempt','An official promotion','A school competition'],ans:1},
+  {q:'Which is the SAFEST place to download an app?',opts:['A link from a WhatsApp group','Official App Store or Google Play','A gaming forum','A friend\'s file-sharing link'],ans:1},
+];
+let bossState={q:0,score:0,answers:[],timer:null,timeLeft:15};
+
+function renderBoss(){
+  bossState={q:0,score:0,answers:[],timer:null,timeLeft:15};
+  document.getElementById('boss-arena').innerHTML=`
+    <div class="boss-icon">💀</div>
+    <div class="boss-name">MASTER HACKER</div>
+    <div style="color:var(--dim);margin-bottom:16px;font-size:.85rem">10 questions · 15 seconds each · Defend CyberCity!</div>
+    <div class="boss-progress" id="boss-progress">
+      ${bossQuestions.map((_,i)=>`<div class="q-dot" id="qdot-${i}">${i+1}</div>`).join('')}
+    </div>
+    <div class="timer-ring" id="timer-ring"><div class="timer-num" id="timer-num">15</div></div>
+    <div class="boss-q" id="boss-q"></div>
+    <div class="boss-opts" id="boss-opts"></div>`;
+  renderBossQ();
+  setTimeout(()=>showMascotMsg('Final Boss! Answer fast — 15 seconds per question! You\'ve got this! 💪',4000),500);
+}
+function renderBossQ(){
+  const q=bossQuestions[bossState.q];
+  document.getElementById('boss-q').textContent=q.q;
+  document.getElementById('boss-opts').innerHTML=q.opts.map((o,i)=>`<button class="boss-opt" onclick="answerBoss(${i})">${o}</button>`).join('');
+  const dot=document.getElementById('qdot-'+bossState.q);
+  if(dot){document.querySelectorAll('.q-dot').forEach(d=>d.classList.remove('current'));dot.classList.add('current')}
+  startBossTimer();
+}
+function startBossTimer(){
+  if(bossState.timer)clearInterval(bossState.timer);
+  bossState.timeLeft=15;updateTimerDisplay();
+  bossState.timer=setInterval(()=>{
+    bossState.timeLeft--;updateTimerDisplay();
+    if(bossState.timeLeft<=0){clearInterval(bossState.timer);answerBoss(-1);}
+  },1000);
+}
+function updateTimerDisplay(){
+  const ring=document.getElementById('timer-ring');
+  const num=document.getElementById('timer-num');
+  if(!ring)return;
+  const pct=bossState.timeLeft/15*100;
+  const col=bossState.timeLeft>8?'var(--accent)':bossState.timeLeft>4?'var(--accent2)':'var(--accent3)';
+  ring.style.background=`conic-gradient(${col} ${pct}%,rgba(255,255,255,.1) 0)`;
+  if(num)num.textContent=bossState.timeLeft;
+}
+function answerBoss(choice){
+  clearInterval(bossState.timer);
+  const q=bossQuestions[bossState.q];
+  const correct=choice===q.ans;
+  bossState.answers.push(correct);
+  if(correct){bossState.score++;sfx('correct');}else{sfx('wrong');state.mistakes++;}
+  const opts=document.querySelectorAll('.boss-opt');
+  opts.forEach((o,i)=>{o.onclick=null;if(i===q.ans)o.classList.add('correct');else if(i===choice)o.classList.add('wrong');});
+  const dot=document.getElementById('qdot-'+bossState.q);
+  if(dot){dot.classList.remove('current');dot.classList.add(correct?'correct':'wrong');}
+  setTimeout(()=>{
+    bossState.q++;
+    if(bossState.q>=bossQuestions.length)endBoss();
+    else renderBossQ();
+  },1200);
+}
+function endBoss(){
+  const score=bossState.score,total=bossQuestions.length;
+  const good=score>=6;
+  const xpEarned=score*45+(score===total?55:0);
+  if(score===total)awardBadge('🏆','Perfect Score — Final Boss!');
+  if(score>=8)awardBadge('🧠','Cyber Genius');
+  showPopup(good,good?'💀⚡':'💀😤',
+    good?'MASTER HACKER DEFEATED!':'Hacker Retreated — For Now...',
+    good?`Incredible! You scored ${score}/${total} — the Master Hacker has been arrested. CyberCity is SAVED!`:
+         `You scored ${score}/${total}. The hacker escaped but you learned valuable lessons. Keep practicing!`,
+    `You answered ${score} of ${total} correctly across all cyber threats. Every skill you build helps protect you and your family online.`,
+    ()=>{
+      if(!state.completedLevels.includes(9))state.completedLevels.push(9);
+      awardXP(xpEarned);updateHUD();showCertificate();
+    });
+}
+
+// ============================================================
+// CERTIFICATE
+// ============================================================
+function showCertificate(){
+  awardBadge('🎖','Mission Complete!');
+  document.getElementById('cert-name').textContent='Agent '+state.agentName.toUpperCase();
+  document.getElementById('cert-score').textContent=state.xp;
+  document.getElementById('cert-date').textContent=new Date().toDateString().toUpperCase();
+  // Add to mock student roster
+  const existing = dashboardStudents.find(s=>s.name===state.agentName);
+  if(!existing) dashboardStudents.push({name:state.agentName,xp:state.xp,completed:state.completedLevels,mistakes:state.mistakes});
+  showScreen('cert-screen');
+  sfx('levelup');setTimeout(()=>sfx('levelup'),500);
+  showMascotMsg('🏆 CONGRATULATIONS! You are a true Cyber Hero! Print your certificate and keep CyberCity safe! 🛡',6000);
+}
+
+function restartGame(){
+  state.xp=0;state.completedLevels=[];state.currentLevel=null;
+  state.achievements=[];state.mistakes=0;state.levelMistakes=0;
+  document.getElementById('hud').style.display='none';
+  document.getElementById('mascot').style.display='none';
+  showScreen('title-screen');
+}
+
+// ============================================================
+// TEACHER DASHBOARD
+// ============================================================
+function showTeacherLogin(){showScreen('teacher-login-screen')}
+
+function teacherLogin(){
+  const pw=document.getElementById('teacher-pw-input').value;
+  if(pw==='teacher123'){
+    sfx('correct');
+    document.getElementById('hud').style.display='flex';
+    document.getElementById('hud-name').textContent='TEACHER';
+    showScreen('teacher-screen');
+    renderDashboard();
+  } else {
+    sfx('wrong');
+    document.getElementById('teacher-pw-input').style.borderColor='var(--accent3)';
+    document.getElementById('teacher-pw-input').placeholder='Wrong password! Try: teacher123';
+  }
+}
+
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function renderDashboard(){
+  // Stats
+  const total=dashboardStudents.length;
+  const avgXP=Math.round(dashboardStudents.reduce((a,s)=>a+s.xp,0)/total)||0;
+  const completed9=dashboardStudents.filter(s=>s.completed.length>=9).length;
+  const avgCompletion=Math.round(dashboardStudents.reduce((a,s)=>a+s.completed.length,0)/total*100/9)||0;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent)">${total}</div><div class="stat-label">Students</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent2)">${avgXP}</div><div class="stat-label">Avg XP</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent3)">${completed9}</div><div class="stat-label">Completed All</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent5)">${avgCompletion}%</div><div class="stat-label">Avg Progress</div></div>`;
+
+  // Student table
+  const levelLabels=['PW','Fish','Soc','OTP','Bull','Deep','Mal','Foot','Boss'];
+  document.getElementById('student-table').innerHTML=`
+    <thead><tr><th>STUDENT</th><th>XP</th><th>MISSIONS</th><th>MISTAKES</th><th>STATUS</th></tr></thead>
+    <tbody>${dashboardStudents.map(s=>`
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td style="color:var(--accent2);font-family:'Orbitron',monospace;font-size:.8rem">${s.xp}</td>
+        <td><div class="progress-pills">${levelLabels.map((l,i)=>`<div class="pill ${s.completed.includes(i+1)?'done':''} ${i===8&&s.completed.includes(9)?'boss':''}" title="${l}">${l}</div>`).join('')}</div></td>
+        <td style="color:${s.mistakes>10?'var(--accent3)':s.mistakes>5?'var(--accent2)':'var(--accent)'}">
+          ${s.mistakes} ${s.mistakes>10?'⚠':''}
+        </td>
+        <td style="font-size:.78rem;color:${s.completed.length>=9?'var(--accent)':s.completed.length>=5?'var(--accent2)':'var(--dim)'}">
+          ${s.completed.length>=9?'🏆 Hero':s.completed.length>=5?'⚡ In Progress':'🔰 Started'}
+        </td>
+      </tr>`).join('')}</tbody>`;
+
+  // Weakness analysis
+  const levelNames=['Password Safety','Phishing Emails','Social Media','OTP Scams','Cyberbullying','Deepfakes','Malware','Digital Footprint'];
+  const levelCompletion=levelNames.map((_,i)=>({
+    name:levelNames[i],
+    pct:Math.round(dashboardStudents.filter(s=>s.completed.includes(i+1)).length/total*100)
+  })).sort((a,b)=>a.pct-b.pct);
+  document.getElementById('weakness-chart').innerHTML=`
+    <div style="font-size:.8rem;color:var(--dim);margin-bottom:12px">Lower completion = area needing more classroom attention</div>
+    ${levelCompletion.map(l=>`
+      <div class="weakness-bar">
+        <div class="weakness-label">${l.name}</div>
+        <div class="weakness-track"><div class="weakness-fill" style="width:${l.pct}%;background:${l.pct<50?'var(--accent3)':l.pct<80?'var(--accent2)':'var(--accent)'}"></div></div>
+        <div class="weakness-pct">${l.pct}%</div>
+      </div>`).join('')}
+    <div style="margin-top:16px;padding:12px;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);border-radius:8px;font-size:.82rem;color:#ff8a8a">
+      ⚠ <strong>Recommendation:</strong> ${levelCompletion[0].name} has the lowest completion rate. Consider a classroom discussion on this topic before students play Level ${levelCompletion.findIndex(l=>l.name===levelCompletion[0].name)+1}.
+    </div>`;
+
+  // Alerts
+  const struggling=dashboardStudents.filter(s=>s.mistakes>10||s.completed.length<2);
+  document.getElementById('alerts-list').innerHTML=struggling.length?
+    struggling.map(s=>`<div class="alert-box">⚠ <strong>${s.name}</strong> — ${s.mistakes>10?`${s.mistakes} mistakes (high error rate)`:'Only completed '+s.completed.length+' mission(s)'} — may need additional support</div>`).join('')+
+    `<div style="font-size:.78rem;color:var(--dim);margin-top:8px">Consider pairing these students with higher-performing peers or providing one-on-one guidance.</div>`
+    :'<div style="color:var(--accent);font-size:.9rem;text-align:center;padding:20px">✅ All students are progressing well! No alerts.</div>';
+}
+
+function refreshDashboard(){sfx('click');renderDashboard();showMascotMsg('Dashboard refreshed! 📊',2000);}
+
+function simulateJoin(){
+  const code=document.getElementById('join-code-input').value.trim();
+  if(!code){return;}
+  sfx('correct');
+  const names=['Alex T.','Jordan M.','Sam K.','Casey L.','Riley P.'];
+  const newStudent={
+    name:names[Math.floor(Math.random()*names.length)]+' ('+code+')',
+    xp:Math.floor(Math.random()*600+100),
+    completed:[1,2,3].slice(0,Math.floor(Math.random()*3+1)),
+    mistakes:Math.floor(Math.random()*8)
+  };
+  dashboardStudents.push(newStudent);
+  renderDashboard();
+  document.getElementById('join-code-input').value='';
+  showMascotMsg('New student joined! Dashboard updated. 🎉',3000);
+}
+
+function exportCSV(){
+  sfx('click');
+  const header='Student,XP,Missions Completed,Mistakes\n';
+  const rows=dashboardStudents.map(s=>`${s.name},${s.xp},${s.completed.length},${s.mistakes}`).join('\n');
+  const blob=new Blob([header+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='securenet_class_report.csv';a.click();
+}
+
+function printReport(){sfx('click');window.print();}
+</script>
+</body>
+</html>
